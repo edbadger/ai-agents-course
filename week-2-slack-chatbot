@@ -1,0 +1,194 @@
+{
+  "name": "Week 2: Slack Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C09GKMNA3KM",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        0
+      ],
+      "id": "c7dd84c9-ce5d-49a0-8a43-46bb9254fab6",
+      "name": "Send a message",
+      "webhookId": "c3747ae3-3cd1-4060-9250-9a1988031da0",
+      "credentials": {
+        "slackApi": {
+          "id": "TDK4LLb2ED9nmy8v",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C09GKMNA3KM",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "cb0240c5-9f4e-47c4-b07b-725b1cbb7285",
+      "name": "Slack Trigger",
+      "webhookId": "3e0bf43d-eaab-4f9c-bbc7-13f16c25b263",
+      "credentials": {
+        "slackApi": {
+          "id": "TDK4LLb2ED9nmy8v",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.blocks[0].elements[0].elements[1].text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c1885ddc-54a2-4a4a-8b8c-057d1c246649",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        176
+      ],
+      "id": "c667e8bf-d68a-4b41-a710-95bfe98b7a94",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "K4pI7fegL1NQI6I2",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Slack Trigger": [
+      {
+        "json": {
+          "user": "U04E3ABVC4X",
+          "type": "app_mention",
+          "ts": "1758645761.841069",
+          "client_msg_id": "81163997-9e5e-455d-b868-803b7ca5a029",
+          "text": "<@U092THATMF0> what’s your favourite movie?",
+          "team": "T04EWFNM249",
+          "blocks": [
+            {
+              "type": "rich_text",
+              "block_id": "Se/fx",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "user",
+                      "user_id": "U092THATMF0"
+                    },
+                    {
+                      "type": "text",
+                      "text": " what’s your favourite movie?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "channel": "C09GKMNA3KM",
+          "event_ts": "1758645761.841069"
+        }
+      }
+    ],
+    "AI Agent": [
+      {
+        "json": {
+          "output": "I don’t have personal favorites, but I can help you find a great movie. If you tell me the mood or genre you’re in the mood for, I’ll tailor some picks. For example:\n\n- Gripping thriller: Se7en\n- Timeless drama: The Godfather or The Shawshank Redemption\n- Mind-bending sci‑fi: Inception or Interstellar\n- Animated classic: Spirited Away\n- Light-hearted comedy: The Grand Budapest Hotel\n\nWhat kind of vibe are you after?"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "27bd6898-d21e-4000-959a-dac2e6e22c51",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5ecce7eb81f8fd70e4c5200c82cdcb7c58516d88e35aa4d5ade4a6b248e237a0"
+  },
+  "id": "jzhJuHPMqhgeDtvi",
+  "tags": []
+}
