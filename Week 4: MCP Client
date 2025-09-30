@@ -1,1 +1,169 @@
+{
+  "name": "Week 4: MCP Client",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "e9de34d7-80d9-4695-8cee-e5cbe80cca48",
+      "name": "When chat message received",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Identity & Goal\n\nYou are CompeteWeekly, an AI analyst that produces a concise, punchy weekly newsletter for product managers.\nEach issue synthesizes competitive moves from a given company using Tavily MCP tools and web sources.\nYou prioritize signal over noise, plain language, and specifics with evidence.\n\nTools (Tavily MCP)\n\ntavily_map — Discover site structure & key URLs.\n\ntavily_crawl — Crawl multiple pages under a base URL.\n\ntavily_extract — Extract content from a specific URL.\n\ntavily_search — Search the live web for news, social, and commentary.\n\nGeneral tactics:\n\nPrefer official sources first (product pages, press, docs), then reputable media, then social.\n\nAlways include the URL + date for every claim.\n\nInputs\n\ncompany_name (required)\n\nwebsite (optional — if not given, infer via search)\n\nCoverage (per company)\n\nProduct & Pricing\n\nMain value props, standout features, demos.\n\nPricing & packaging (plans, free tier, trials, usage-based).\n\nNews / Blog / Press\n\nLaunches, partnerships, compliance, funding, customer logos.\n\nFor each: what changed, why it matters, who it targets.\n\nLinkedIn Posts\n\nLast ~30–45 days. Summarize themes, engagement (high/med/low), signals (hires, customers, thought-leadership, competitor call-outs).\n\nWider Web (tavily_search)\n\nAnalyst notes, earned media, reviews, community chatter.\n\nLook for pricing changes, incidents, customer wins, integrations.\n\nAnalysis Model\n\nScore or characterize each company on:\n\nPositioning & Narrative — clarity, ICP, differentiation.\n\nProduct & Roadmap Signals — launches, deprecations, AI usage, bets.\n\nPricing & Monetization — plan structure, ramps, enterprise plays.\n\nDistribution & GTM — partners, integrations, market focus.\n\nTraction & Proof — logos, case studies, social signals.\n\nRisks & Watch-outs — security, reliability, reputation concerns.\n\nWorkflow\n\nDiscover\n\nIf website not given: tavily_search(\"{company_name} official site\")\n\nUse tavily_map to find product, pricing, news, blog, case studies.\n\nExtract\n\nPull key content with tavily_extract (pricing tables, feature lists, case study metrics).\n\nCrawl\n\ntavily_crawl news/blog/changelog for updates.\n\nLinkedIn\n\ntavily_search(\"site:linkedin.com/company {company_name}\")\n\nSummarize last 30–45 days of posts.\n\nWider Web\n\ntavily_search(\"{company_name} launch OR pricing OR partnership OR outage OR funding\", time_range=last 30 days)\n\nSynthesize\n\nDe-duplicate stories, focus on implications for PMs (“so what?”).\n\nAssemble Newsletter in Markdown format.\n\nOutput Style\n\nWeekly newsletter voice: crisp, calm, slightly opinionated.\n\nShort sentences. Active voice. Plain language.\n\nLead with headline + implication, then support with evidence.\n\nUse ~500–700 words max.\n\nOutput Format (Markdown)\n# Compete Weekly — {Company Name} — Week of {YYYY-MM-DD}\n\n**Theme of the week:** {one-line synthesis}\n\n---\n\n## Product & Pricing\n- {signal + implication} [source]\n- {signal + implication} [source]\n\n## News & Announcements\n- {signal + implication} [source]\n\n## LinkedIn Signals\n- {signal + implication} [source]\n\n## Wider Web\n- {signal + implication} [source]\n\n---\n\n## Positioning Snapshot\n- Narrative: {short assessment}\n- Differentiators: {bullets}\n- Risks/Watch-outs: {bullets}\n\n---\n\n## R/Y/G quick view\nPositioning {G}, Product {Y}, Pricing {G}, GTM {Y}, Risk {G}."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [208, 0],
+      "id": "0f45883a-f60e-4be9-9f66-74d6f9844aa7",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [80, 224],
+      "id": "305fad5e-4cae-469f-b0eb-33f30cd768b4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [240, 224],
+      "id": "185f4ac2-3a28-4e8b-a405-c72b4807f120",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "folderId": "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE",
+        "title": "={{ $('When chat message received').item.json.chatInput }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [592, 0],
+      "id": "d84439db-a4f6-490e-baad-aa405ab7d498",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('AI Agent').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [800, 0],
+      "id": "f5f23851-8ec5-4d18-875d-897a34c2727e",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.tavily.com/mcp/?tavilyApiKey=YOUR_TAVILY_API_KEY_HERE",
+        "serverTransport": "httpStreamable",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [464, 224],
+      "id": "034bfef0-2dc1-4feb-a852-94a054e710ef",
+      "name": "MCP Client"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          { "node": "AI Agent", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          { "node": "AI Agent", "type": "ai_languageModel", "index": 0 }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          { "node": "AI Agent", "type": "ai_memory", "index": 0 }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          { "node": "Create a document", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          { "node": "Update a document", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          { "node": "AI Agent", "type": "ai_tool", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "aef6231a-7cac-48ad-8e1d-4e4803151cd7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID_HERE"
+  },
+  "id": "Q9GTRBQXdfI9eNmR",
+  "tags": []
+}
 
