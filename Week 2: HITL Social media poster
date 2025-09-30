@@ -1,1 +1,376 @@
+{
+  "name": "Week 2: HITL Social media poster",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": ["app_mention"],
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_CHANNEL_NAME"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [-32, -32],
+      "id": "6c3731db-0747-4c6c-b97b-2cbdb3860537",
+      "name": "Slack Trigger",
+      "webhookId": "YOUR_SLACK_WEBHOOK_ID",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Initial Content\n",
+        "height": 304,
+        "width": 624
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-112, -128],
+      "typeVersion": 1,
+      "id": "d4b7ac67-a26b-47ff-8a00-acd50ef12c83",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.blocks[0].elements[0].elements[1].text }}",
+        "options": {
+          "systemMessage": "# Overview\nYou are an AI agent responsible for creating Twitter (X) posts based on user requests.\n\n## Instructions\n1. Always use the Tavily Search tool to find accurate, current information about the topic.  \n2. Write an informative, engaging tweet (up to 280 characters).  \n3. Include a brief reference to the source (e.g., \"via TechCrunch\", \"according to The Verge\") directly in the tweet.  \n4. Do not output anything except the final tweet.  \n\n## Tool\n- Tavily Search: Use this for real-time web search. Must be used every time before creating the post.\n\n## Example\n1) Input: \"Create a tweet about NASA’s latest discovery.\"  \n2) Action: Search the web using Tavily Search.  \n3) Output: \"NASA just found signs of ancient riverbeds on Mars—suggesting the Red Planet may have once been home to life. Huge leap in space exploration 🚀 (via NASA) #Mars #SpaceNews\"\n\n## Final Notes\n- Avoid clickbait or speculation—stick to factual and sourced content.  \n- Use hashtags or emojis only to enhance visibility.  \n- Keep language friendly, concise, and informative.  \n- Never use an \"@\" symbol when referencing the source.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [176, -32],
+      "id": "13985780-26ce-4714-8762-f7b9ca37b32e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [320, 384],
+      "id": "acd94b9f-facc-4f4f-b2ef-aac8e65f77d4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Models\n",
+        "height": 256,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [224, 288],
+      "typeVersion": 1,
+      "id": "63c73e13-30a7-4cdc-bf42-897395f9f6e0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Tools\n",
+        "height": 256,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-96, 288],
+      "typeVersion": 1,
+      "id": "cda8ff16-3a25-4c1e-a57a-e34e3327a9dc",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Tavily Search",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_TAVILY_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', ``, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [0, 384],
+      "id": "e2f59672-bdcd-44ad-9d34-6b4f9f9aca64",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "7515679c-035d-43ce-b424-667ee02e52cc", "name": "output", "value": "={{ $json.output }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, -32],
+      "id": "78352995-8c4f-49ef-bffe-3f533ae88d41",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## Set iteration\n\n",
+        "height": 304,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [576, -128],
+      "typeVersion": 1,
+      "id": "851aa9cc-479a-481b-bd5f-c02c75bbfa9c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Human input\n\n\n",
+        "height": 304,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [912, -128],
+      "typeVersion": 1,
+      "id": "3353973f-19b1-4d3c-af37-a2a376b111a0",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_CHANNEL_NAME"
+        },
+        "message": "=Good to go?\n\n{{ $json.output }}",
+        "responseType": "freeText",
+        "options": { "appendAttribution": false }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [1008, -32],
+      "id": "fe12cf05-cd7a-41e8-80c4-41a0c928638f",
+      "name": "Send message and wait for response",
+      "webhookId": "YOUR_SLACK_WEBHOOK_ID",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Decision Point",
+        "height": 304,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1248, -128],
+      "typeVersion": 1,
+      "id": "1455766e-3c10-4b73-8cf6-5d938fe5dc4c",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.data.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "approved",
+              "description": "The post has been reviewed and approved by the human, with no further changes required. It is ready to be sent as-is without modifications."
+            },
+            {
+              "category": "rejected",
+              "description": "The post has been reviewed, but the human requests modifications before it is sent like tweaks, removing parts, rewording, etc. This could include suggested edits, rewording, or major revisions."
+            }
+          ]
+        },
+        "options": {
+          "multiClass": false,
+          "fallback": "=rejected",
+          "enableAutoFixing": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [1312, -32],
+      "id": "52e0626c-4157-488c-9584-fd662da87995",
+      "name": "Text Classifier",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bsky.social/xrpc/com.atproto.server.createSession",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "identifier", "value": "YOUR_BSKY_HANDLE" },
+            { "name": "password", "value": "YOUR_BSKY_APP_PASSWORD" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1792, -128],
+      "id": "71d6042f-4ebe-4b9a-af02-b60bffb0f1e2",
+      "name": "Create BlueSky Session"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bsky.social/xrpc/com.atproto.repo.createRecord",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Authorization", "value": "=Bearer {{ $json.accessJwt }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"repo\": \"YOUR_BSKY_HANDLE\",\n  \"collection\": \"app.bsky.feed.post\",\n  \"record\": {\n    \"text\": \"{{ $('Edit Fields').item.json.output }}\",\n    \"createdAt\": \"{{ $now }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1968, -128],
+      "id": "5856cc39-e16c-46d6-8a3c-3c5c6bfe790f",
+      "name": "Post to BlueSky"
+    },
+    {
+      "parameters": {
+        "content": "## Post to Bluesky",
+        "height": 256,
+        "width": 528
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1696, -208],
+      "typeVersion": 1,
+      "id": "2ac7b0df-0b35-48e6-af35-91b08d24745b",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the post to revise: {{ $('Edit Fields').item.json.output }}\n\nHere is the human feedback: {{ $('Send message and wait for response').item.json.data.text }}",
+        "options": {
+          "systemMessage": "You are an expert social media copywriter. Your job is to take an incoming social media post, and revise it according to the human feedback you receive."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1824, 208],
+      "id": "782cd646-7dbc-4b8e-90c4-8030cbe2d69f",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "content": "## Revise post",
+        "height": 288,
+        "width": 528
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1696, 144],
+      "typeVersion": 1,
+      "id": "832d06a1-46e7-4c93-a7a1-cac7f2ba6fb5",
+      "name": "Sticky Note7"
+    }
+  ],
+  "pinData": {
+    "Slack Trigger": [
+      {
+        "json": {
+          "user": "YOUR_SLACK_USER_ID",
+          "type": "app_mention",
+          "ts": "YOUR_TS",
+          "client_msg_id": "YOUR_CLIENT_MSG_ID",
+          "text": "<@YOUR_BOT_USER_ID> write me a post about the health benefits of running",
+          "team": "YOUR_SLACK_TEAM_ID",
+          "blocks": [
+            {
+              "type": "rich_text",
+              "block_id": "YOUR_BLOCK_ID",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    { "type": "user", "user_id": "YOUR_BOT_USER_ID" },
+                    { "type": "text", "text": " write me a post about the health benefits of running" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "channel": "YOUR_SLACK_CHANNEL_ID",
+          "event_ts": "YOUR_EVENT_TS"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Slack Trigger": { "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]] },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          { "node": "AI Agent", "type": "ai_languageModel", "index": 0 },
+          { "node": "Text Classifier", "type": "ai_languageModel", "index": 0 },
+          { "node": "AI Agent1", "type": "ai_languageModel", "index": 0 }
+        ]
+      ]
+    },
+    "HTTP Request": { "ai_tool": [[{ "node": "AI Agent", "type": "ai_tool", "index": 0 }]] },
+    "AI Agent": { "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]] },
+    "Edit Fields": { "main": [[{ "node": "Send message and wait for response", "type": "main", "index": 0 }]] },
+    "Send message and wait for response": { "main": [[{ "node": "Text Classifier", "type": "main", "index": 0 }]] },
+    "Text Classifier": {
+      "main": [
+        [{ "node": "Create BlueSky Session", "type": "main", "index": 0 }],
+        [{ "node": "AI Agent1", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create BlueSky Session": { "main": [[{ "node": "Post to BlueSky", "type": "main", "index": 0 }]] },
+    "AI Agent1": { "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "94349960-16d1-4f3c-9594-5a8f78504446",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID_HERE"
+  },
+  "id": "vxPmJlWYTiJBHMgn",
+  "tags": []
+}
 
