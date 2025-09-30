@@ -1,1 +1,141 @@
+{
+  "name": "Week 2: Slack Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [528, 0],
+      "id": "c7dd84c9-ce5d-49a0-8a43-46bb9254fab6",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "trigger": ["app_mention"],
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "cb0240c5-9f4e-47c4-b07b-725b1cbb7285",
+      "name": "Slack Trigger",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.blocks[0].elements[0].elements[1].text }}",
+        "options": { "systemMessage": "You are a helpful assistant" }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [208, 0],
+      "id": "c1885ddc-54a2-4a4a-8b8c-057d1c246649",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [208, 176],
+      "id": "c667e8bf-d68a-4b41-a710-95bfe98b7a94",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Slack Trigger": [
+      {
+        "json": {
+          "user": "YOUR_SLACK_USER_ID",
+          "type": "app_mention",
+          "ts": "YOUR_SLACK_TIMESTAMP",
+          "client_msg_id": "YOUR_CLIENT_MSG_ID",
+          "text": "<@YOUR_BOT_USER_ID> what’s your favourite movie?",
+          "team": "YOUR_SLACK_TEAM_ID",
+          "blocks": [
+            {
+              "type": "rich_text",
+              "block_id": "REDACTED_BLOCK_ID",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    { "type": "user", "user_id": "YOUR_BOT_USER_ID" },
+                    { "type": "text", "text": " what’s your favourite movie?" }
+                  ]
+                }
+              ]
+            }
+          ],
+          "channel": "YOUR_SLACK_CHANNEL_ID",
+          "event_ts": "YOUR_SLACK_TIMESTAMP"
+        }
+      }
+    ],
+    "AI Agent": [
+      {
+        "json": {
+          "output": "I don’t have personal favorites, but I can help you find a great movie. If you tell me the mood or genre you’re in the mood for, I’ll tailor some picks. For example:\n\n- Gripping thriller: Se7en\n- Timeless drama: The Godfather or The Shawshank Redemption\n- Mind-bending sci-fi: Inception or Interstellar\n- Animated classic: Spirited Away\n- Light-hearted comedy: The Grand Budapest Hotel\n\nWhat kind of vibe are you after?"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Slack Trigger": { "main": [[{ "node": "AI Agent", "type": "main", "index": 0 }]] },
+    "OpenAI Chat Model": { "ai_languageModel": [[{ "node": "AI Agent", "type": "ai_languageModel", "index": 0 }]] },
+    "AI Agent": { "main": [[{ "node": "Send a message", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "27bd6898-d21e-4000-959a-dac2e6e22c51",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID_HERE"
+  },
+  "id": "jzhJuHPMqhgeDtvi",
+  "tags": []
+}
 
