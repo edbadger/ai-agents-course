@@ -1,1 +1,327 @@
+{
+  "name": "Week 4: MCP Server",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "YOUR_WEBHOOK_PATH_HERE"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "id": "18b03cf0-277b-4bed-83ce-5c3b7123f81e",
+      "name": "MCP Server Trigger",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE",
+      "notesInFlow": true,
+      "notes": "**Google Drive:**\n1. **Upload file in Google Drive** → upload: file\n2. **Update file in Google Drive** → update: file\n3. **Move file in Google Drive** → move: file\n4. **Create folder in Google Drive** → create: folder\n5. **Share folder in Google Drive** → share: folder\n6. **Search files and folders in Google...** → search: fileFolder\n\n**Google Docs:**\n7. **Create a document in Google Docs** → create: document\n8. **Update a document in Google Docs** → update: document\n9. **Get a document in Google Docs** → get: document\n\n\n**Email sending agent:**\n10. AI Agent that can call the gmail email tool, enabling it to send emails\n"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Input_Data_Field_Name', ``, 'string') }}",
+        "driveId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parent_Drive', ``, 'string') }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parent_Folder', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [-64, 240],
+      "id": "d75110b6-3c61-41be-9290-e1094fb20ec8",
+      "name": "Upload file in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File_to_Update', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [-64, 416],
+      "id": "c9a5e375-89d6-49af-a629-e62421f8366e",
+      "name": "Update file in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('File', ``, 'string') }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [-64, 592],
+      "id": "05148658-8404-4696-a7ad-4b8af69bd7ce",
+      "name": "Move file in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "limit": 50,
+        "queryString": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Query', ``, 'string') }}",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [128, 224],
+      "id": "29e92720-0a96-4265-aa4d-c27df172e065",
+      "name": "Search files and folders in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "driveId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parent_Drive', ``, 'string') }}",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parent_Folder', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [128, 416],
+      "id": "82fcbac7-7973-4abd-88f1-4d7a4e0a062e",
+      "name": "Create folder in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "preBuiltAgentsCalloutGoogleDrive": "",
+        "descriptionType": "auto",
+        "authentication": "oAuth2",
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Folder', ``, 'string') }}",
+          "mode": "id"
+        },
+        "permissionsUi": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [128, 576],
+      "id": "f31c91df-3083-443b-b2cf-e1cc1f1f6206",
+      "name": "Share folder in Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "folderId": "YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE",
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [288, 224],
+      "id": "c34bf81c-7f9e-430a-9699-b3eb9cae55c3",
+      "name": "Create a document in Google Docs",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Doc_ID_or_URL', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('actionFields0_Text', ``, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [304, 416],
+      "id": "3e07c14d-aed0-40c8-b60d-2508f8fd74f4",
+      "name": "Update a document in Google Docs",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Doc_ID_or_URL', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [304, 576],
+      "id": "9d68050e-0126-4de8-8781-262ac5a09cdc",
+      "name": "Get a document in Google Docs",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI Agent that can call the gmail email tool, enabling it to send emails",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [624, 272],
+      "id": "4b4d564c-a212-4392-ad24-44c23358d2cc",
+      "name": "AI Agent Tool"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [624, 432],
+      "id": "ba30dc92-b7e3-43bd-b805-c269fadaa030",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [768, 432],
+      "id": "4a4ca510-f4e3-45e3-95b0-7f37b5cacbae",
+      "name": "Send a message in Gmail",
+      "webhookId": "YOUR_WEBHOOK_ID_HERE",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## MCP Instructions ##\n\n**Google Drive:**\n1. **Upload file in Google Drive** → upload: file\n2. **Update file in Google Drive** → update: file\n3. **Move file in Google Drive** → move: file\n4. **Create folder in Google Drive** → create: folder\n5. **Share folder in Google Drive** → share: folder\n6. **Search files and folders in Google...** → search: fileFolder\n\n\n**Google Docs:**\n7. **Create a document in Google Docs** → create: document\n8. **Update a document in Google Docs** → update: document\n9. **Get a document in Google Docs** → get: document\n\n\n**Email sending agent:**\n10. AI Agent that can call the gmail email tool, enabling it to send emails\n",
+        "height": 416,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-672, -176],
+      "typeVersion": 1,
+      "id": "2ed7bfec-cebc-400d-84ec-d8573d48a074",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Upload file in Google Drive": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Update file in Google Drive": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Move file in Google Drive": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Search files and folders in Google Drive": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Create folder in Google Drive": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Share folder in Google Drive": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Create a document in Google Docs": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Update a document in Google Docs": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "Get a document in Google Docs": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "AI Agent Tool": { "ai_tool": [[{ "node": "MCP Server Trigger", "type": "ai_tool", "index": 0 }]] },
+    "OpenAI Chat Model": { "ai_languageModel": [[{ "node": "AI Agent Tool", "type": "ai_languageModel", "index": 0 }]] },
+    "Send a message in Gmail": { "ai_tool": [[{ "node": "AI Agent Tool", "type": "ai_tool", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9076780c-e4bc-44b8-90ac-819350fd0ac0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID_HERE"
+  },
+  "id": "sUVu4etS7AUwQNDC",
+  "tags": []
+}
 
