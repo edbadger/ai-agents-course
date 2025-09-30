@@ -1,1 +1,378 @@
+{
+  "name": "Week 3: Evaluator Optimiser",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": { "item": [{ "mode": "everyMinute" }] },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_DRIVE_FOLDER_URL",
+          "mode": "url"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "2994faec-3c98-4c8c-bbc7-bd6acc615344",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [208, 0],
+      "id": "78687075-44bf-4b32-8ec1-8bcfe067b683",
+      "name": "Get a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [688, 448],
+      "id": "7712852e-b3d8-4a6d-8806-642b1a5f9cef",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f9e5350e-e33d-488c-bf92-f3d2b244b6dc",
+              "name": "LinkedIn post",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [768, 0],
+      "id": "5571209d-0eff-4b4e-a9f1-9ae8263cb7a5",
+      "name": "Set post"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the LinkedIn post:\n{{ $json['LinkedIn post'] }}",
+        "options": {
+          "systemMessage": "Overview\nYou are an expert LinkedIn post evaluator. Your job is to provide feedback on LinkedIn posts that highlight new product features from PRDs.\n\nCriteria\nMake sure the post has a strong hook that grabs attention in the first line\nMake sure the post clearly explains the business value/impact of the features, not just technical details\nMake sure the post includes 3-5 relevant hashtags at the end\nMake sure the post has a clear call-to-action that encourages engagement (questions, comments, shares)\nMake sure the post is under 1,300 characters for optimal LinkedIn visibility\nMake sure the tone is professional yet conversational, avoiding overly promotional language\n\n\nOutput\nYou only need to output feedback. If the post is finished and all the criteria are met, simply output \"END\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [976, 0],
+      "id": "c7dd5651-e547-4870-bb9d-28abbf8bc4b8",
+      "name": "Evaluator agent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9b253801-53a1-4090-9e5d-839ac9345bf0",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "END",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1328, 0],
+      "id": "0b4487ab-53f7-4d1d-83d8-348bd7cbfd13",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $('Get a document').item.json.documentId }}",
+        "actionsUi": {
+          "actionFields": [
+            { "action": "insert", "text": "=**LinkedIn Post**\n\n{{ $('Set post').item.json['LinkedIn post'] }}" }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [1616, -96],
+      "id": "d30f9531-add9-4e8a-acd8-5d7e8edf0cfa",
+      "name": "Update a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_N8N_CREDENTIAL_ID",
+          "name": "YOUR_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the LinkedIn post:\n {{ $('Set post').item.json['LinkedIn post'] }}\n\n\nAnd here is the evaluator feedback: \n{{ $('Evaluator agent').item.json.output }}",
+        "options": {
+          "systemMessage": "Overview\nYou are an expert LinkedIn post optimizer. Your job is to take the LinkedIn post and improve it based on the feedback from the evaluator agent.\n\nOnly output the revised post, nothing else."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [1536, 96],
+      "id": "57bca112-f2d4-4911-b1fe-9c35c9a87455",
+      "name": "Optimiser Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Google Drive Trigger').item.json.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [1104, 192],
+      "id": "58dd8b89-87e1-4797-a855-a02534d870d7",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Google Drive Trigger').item.json.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [1552, 304],
+      "id": "421ed885-155a-4547-96f7-f6cb5a68225b",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the PRD content:\n {{ $json.content }}",
+        "options": {
+          "systemMessage": "Overview\nYou are an expert LinkedIn content strategist and product marketing specialist. Your role is to analyze Product Requirements Documents (PRDs) and create compelling LinkedIn posts that highlight new and exciting features in a way that drives engagement, showcases innovation, and builds excitement within professional networks.\nCore Responsibilities\nTransform technical PRD content into engaging, accessible LinkedIn posts\nHighlight the most compelling and innovative features from PRDs\nCreate posts that resonate with both technical and business audiences\nGenerate excitement and buzz around new product releases\nMaintain professional tone while being conversational and approachable\nContent Guidelines\nPost Structure\nHook: Start with an attention-grabbing opening that immediately communicates value\nContext: Briefly explain the problem or opportunity the feature addresses\nFeature Highlight: Showcase 2-3 key features with clear benefits\nImpact: Explain how these features will benefit users/customers\nCall-to-Action: Encourage engagement through questions, comments, or shares\nTone and Style\nProfessional yet conversational\nEnthusiastic but not overly promotional\nTechnical accuracy balanced with accessibility\nUse industry-appropriate terminology while remaining inclusive\nIncorporate storytelling elements when possible\nEngagement Optimization\nUse relevant hashtags (3-5 maximum)\nInclude emojis strategically for visual appeal\nAsk questions to encourage comments\nTag relevant team members or companies when appropriate\nOptimize length for LinkedIn (1,300 characters or less for maximum visibility)\nContent Focus Areas\nInnovation: What makes this feature groundbreaking or unique?\nUser Value: How does this solve real problems or create new opportunities?\nMarket Impact: Why does this matter in the current landscape?\nTeam Achievement: Acknowledge the work behind the feature\nFuture Vision: How does this contribute to broader product strategy?\nInput Processing\nWhen you receive a PRD, you will:\nIdentify the most newsworthy and exciting features\nUnderstand the target audience and use cases\nExtract key benefits and differentiators\nConsider the competitive landscape context\nDetermine the best narrative angle for LinkedIn\nOutput Requirements\nCreate 1 LinkedIn post\nEnsure the post is ready to publish with minimal editing\nOnly output the Linkedin post, nothing else.\nSuccess Metrics Consideration\nYour posts should be optimized to drive:\nHigh engagement rates (likes, comments, shares)\nIncreased visibility for the product/feature\nQuality conversations in the comments\nBrand awareness and thought leadership\nPotential leads or partnership opportunities\nRemember: Your goal is to make technical innovations feel exciting and accessible to a professional audience while maintaining credibility and driving meaningful engagement."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [416, 0],
+      "id": "0340d09f-8ef7-4675-b721-d9d65b7b0cde",
+      "name": "Writer Agent"
+    }
+  ],
+  "pinData": {
+    "Google Drive Trigger": [
+      {
+        "json": {
+          "exportLinks": {
+            "application/rtf": "YOUR_EXPORT_URL",
+            "application/vnd.oasis.opendocument.text": "YOUR_EXPORT_URL",
+            "text/html": "YOUR_EXPORT_URL",
+            "application/pdf": "YOUR_EXPORT_URL",
+            "text/x-markdown": "YOUR_EXPORT_URL",
+            "text/markdown": "YOUR_EXPORT_URL",
+            "application/epub+zip": "YOUR_EXPORT_URL",
+            "application/zip": "YOUR_EXPORT_URL",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "YOUR_EXPORT_URL",
+            "text/plain": "YOUR_EXPORT_URL"
+          },
+          "parents": ["YOUR_GOOGLE_DRIVE_FOLDER_ID"],
+          "lastModifyingUser": {
+            "displayName": "REDACTED_NAME",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "REDACTED_PERMISSION_ID",
+            "emailAddress": "REDACTED_EMAIL",
+            "photoLink": "REDACTED_URL"
+          },
+          "owners": [
+            {
+              "displayName": "REDACTED_NAME",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "REDACTED_PERMISSION_ID",
+              "emailAddress": "REDACTED_EMAIL",
+              "photoLink": "REDACTED_URL"
+            }
+          ],
+          "permissions": [
+            {
+              "kind": "drive#permission",
+              "id": "REDACTED_PERMISSION_ID",
+              "type": "user",
+              "emailAddress": "REDACTED_EMAIL",
+              "role": "owner",
+              "displayName": "REDACTED_NAME",
+              "photoLink": "REDACTED_URL",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": ["drive"],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": ["REDACTED_PERMISSION_ID"],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": { "restrictedForReaders": false, "restrictedForWriters": false },
+            "effectiveDownloadRestrictionWithContext": { "restrictedForReaders": false, "restrictedForWriters": false }
+          },
+          "kind": "drive#file",
+          "id": "YOUR_DOC_ID",
+          "name": "Copy of Week 3 | PRD Example",
+          "mimeType": "application/vnd.google-apps.document",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "5",
+          "webViewLink": "YOUR_WEBVIEW_URL",
+          "iconLink": "YOUR_ICON_URL",
+          "hasThumbnail": true,
+          "thumbnailLink": "YOUR_THUMBNAIL_URL",
+          "thumbnailVersion": "1",
+          "viewedByMe": true,
+          "viewedByMeTime": "2025-08-27T14:19:22.352Z",
+          "createdTime": "2025-08-27T14:19:20.477Z",
+          "modifiedTime": "2025-08-27T14:19:20.482Z",
+          "modifiedByMeTime": "2025-08-27T14:19:20.482Z",
+          "modifiedByMe": true,
+          "shared": false,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "size": "73354",
+          "quotaBytesUsed": "73354",
+          "isAppAuthorized": false,
+          "inheritedPermissionsDisabled": false
+        }
+      }
+    ],
+    "Get a document": [
+      {
+        "json": {
+          "documentId": "YOUR_DOC_ID",
+          "content": "AI-Powered Stakeholder Engagement Tool\nProblem Definition\nObjective\nEnable product managers to communicate more effectively with diverse stakeholders by leveraging AI to understand individual communication preferences and personality types. This directly supports our company goal of improving PM productivity by 25% and reducing stakeholder-related project delays by 40%.\nSuccess metric\nPrimary: 30% reduction in stakeholder communication-related project delays within 6 months of launch\nSecondary: 85% PM satisfaction score with stakeholder communication tools\nTertiary: 20% increase in stakeholder engagement scores on project updates\nStakeholders\nContext\nProduct managers consistently report that managing stakeholder communication is one of their biggest time drains and sources of project friction. Our user research shows that 73% of PMs spend 15+ hours per week on stakeholder management, with communication misalignment being the #2 cause of project delays.\nCurrent solutions are generic and don't account for individual stakeholder preferences. Engineering stakeholders prefer technical details and data, while executive stakeholders want high-level summaries and business impact. Sales stakeholders need customer-facing messaging, while design stakeholders want to understand user experience implications.\nThis feature builds on our existing PM productivity platform and leverages our growing AI capabilities to provide personalized, intelligent stakeholder management.\n\nScope & Constraints\nIn Scope:\nAI personality analysis based on communication history and explicit preferences\nAutomated content adaptation for different stakeholder types\nIntegration with existing platform and Slack\nSupport for 5 core stakeholder archetypes (Data-Driven, Executive, Technical, Customer-Focused, Process-Oriented)\nReal-time communication optimization suggestions\nOut of Scope (v1):\nIntegration with email platforms beyond Slack\nAdvanced sentiment analysis\nMulti-language support\nIntegration with external CRM systems\nMobile app functionality\nConstraints:\nMust comply with GDPR and data privacy regulations\nAI model decisions must be explainable and auditable\nDevelopment timeline: 4 months for MVP\nBudget: $150K development cost\nCannot store sensitive stakeholder data outside approved systems\n\nRisks\nAI Accuracy Risk: Personality classification may be inaccurate, leading to inappropriate communication styles\nPrivacy Concerns: Stakeholders may be uncomfortable with AI analyzing their communication patterns\nAdoption Risk: PMs may not trust AI recommendations initially\nTechnical Risk: Slack integration complexity may cause delays\nScalability Risk: AI model performance may degrade with large stakeholder databases\n\nSolution Definition\nUser flows\nPrimary Flow - Stakeholder Analysis:\nPM connects stakeholder data sources (Slack, platform history)\nAI analyzes communication patterns and explicit preferences\nSystem generates stakeholder personality profile\nPM reviews and confirms/adjusts profile\nAI provides communication recommendations\nSecondary Flow - Message Optimization:\nPM drafts message or update\nSelects target stakeholders\nAI suggests adaptations based on stakeholder profiles\nPM reviews and sends optimized versions\nDesigns\nDashboard View:\nStakeholder matrix showing personality types and engagement levels\nCommunication effectiveness metrics\nQuick access to personality profiles\nSlack Integration:\nSlash command for instant stakeholder analysis\nMessage suggestion overlay\nQuick profile lookup in Slack threads\nStakeholder Profile Cards:\nPersonality type indicator\nCommunication preferences\nHistorical engagement data\nRecommended messaging approach\n\nUser Research\nKey Insights from 15 PM interviews:\n87% want automated stakeholder personality detection\n92% would use AI communication suggestions if accuracy >80%\nPrimary concern: maintaining authentic relationships (67% of respondents)\nPreferred integration: Slack (78%), followed by email (45%)\nStakeholder feedback (8 interviews):\n75% comfortable with communication pattern analysis if transparent\nWant ability to set explicit preferences\nConcerned about over-automation of relationships\n\nAnalysis\nUsage Data Analysis:\nAverage PM manages 12 stakeholders across 3-4 projects\n40% of stakeholder communications result in follow-up clarification requests\nHigh-engagement stakeholders respond 2.3x faster to targeted communication\nA/B Test Results (Prototype):\nPersonalized messages had 34% higher engagement rates\n28% reduction in clarification requests\n91% of PMs found recommendations helpful\nCompetitor references\nExisting Solutions:\nCrystal (personality insights) - good personality framework but limited PM focus\nGong (sales communication) - excellent AI suggestions but sales-focused\nSlack's workflow builder - good integration but no AI personalization\nMonday.com stakeholder views - good visualization but no intelligence layer\nDecision log\nLaunch Readiness\nTesting plan\nPhase 1 - Internal Alpha (Week 1-2):\nInternal PM team testing with sanitized data\nCore functionality validation\nSlack integration testing\nPhase 2 - Closed Beta (Week 3-6):\n25 select customers with high stakeholder complexity\nGather accuracy feedback on personality classification\nMeasure engagement improvement\nPhase 3 - Staged Rollout (Current - Week 7-10):\nPro tier customers only (currently 40% rolled out)\nA/B test results showing 32% improvement in communication effectiveness\nSystem performance stable, accuracy metrics exceeding targets\nOn track for full rollout by August 15th\n\nTracking & analytics\nCore Metrics Dashboard:\nStakeholder personality classification accuracy\nCommunication engagement rates pre/post AI suggestions\nFeature adoption and usage frequency\nCustomer satisfaction scores\nEvents to Track:\nStakeholder profile creation and updates\nAI suggestion acceptance/rejection rates\nMessage adaptation usage\nTime spent on stakeholder communication\n\nMarketing plan\nTarget Audiences:\nEnterprise PMs: Focus on efficiency and stakeholder satisfaction improvements\nPM Teams: Emphasize consistency and knowledge sharing across team members\nExecutive Buyers: Highlight project success rates and PM productivity gains\nLaunch Channels:\nProduct newsletter announcement\nWebinar series: \"AI-Powered Stakeholder Management\"\nPM community partnerships (Product School, Mind the Product)\nIn-app feature tour and onboarding flow\nMessaging:\n\"Stop guessing how to communicate with stakeholders\"\n\"AI that understands your stakeholders as well as you do\"\n\"Turn stakeholder management from burden to superpower\"\n\nCustomer service plan\nSupport Team Training:\nWorkshop on AI personality frameworks (March 10th)\nCommon troubleshooting scenarios\nEscalation path for AI accuracy concerns\nSupport Materials:\nFeature FAQ and troubleshooting guide\nVideo tutorials for setup and usage\nIntegration guides for Slack workspace admins\n\nLegal checks\nCompleted:\n✅ Privacy policy updated for AI analysis disclosure\n✅ Terms of service updated for AI feature limitations\n✅ GDPR compliance review completed\n✅ Data processing agreement templates for enterprise customers\nPending:\nSlack app store submission and review\nThird-party AI liability insurance review\n\nFAQs\nInternal Stakeholder FAQs:\nQ: How accurate is the personality classification?\u000b A: Based on beta testing, our model achieves 82% accuracy in personality type classification, with continuous improvement through user feedback.\nQ: What happens if a stakeholder objects to being analyzed?\u000b A: Users can manually set stakeholder preferences and disable AI analysis for specific individuals.\nExternal User FAQs:\nQ: Does this replace the need for personal relationship building?\u000b A: No, this tool enhances your existing relationships by helping you communicate more effectively. It's meant to supplement, not replace, personal connection.\nQ: What data does the AI use for analysis?\u000b A: The AI analyzes communication patterns, response styles, and explicit preferences. It does not store or analyze sensitive content.\nQ: Can I override AI suggestions?\u000b A: Absolutely. All suggestions are recommendations that you can accept, modify, or ignore based on your judgment.\n\nTimeline\nCompleted Phases:\n✅ March 15: Product Review & Technical Feasibility Sign-off - COMPLETED\n✅ April 1: Design & Technical Architecture Complete - COMPLETED\n✅ May 15: Alpha Release to Internal Team - COMPLETED\n✅ June 1: Closed Beta Launch - COMPLETED\n✅ June 30: Staged Rollout Begins - COMPLETED\nCurrent Phase:\nJuly 15: Staged Rollout at 40% of Pro Tier Customers (In Progress)\nUpcoming Milestones:\nAugust 15: Full Launch to All Pro Tier Customers\nAugust 30: Performance Review & Next Phase Planning\nSeptember 15: Iteration Planning for v2 Features\nCurrent Status: Staged rollout in progress - 40% of Pro tier customers have access. Early metrics exceed targets with 32% improvement in communication effectiveness and 87% user satisfaction. On track for full rollout by August 15th.\n\nImpact\nQuantitative Results:\n32% improvement in communication effectiveness (exceeds 30% target)\n87% PM satisfaction score (exceeds 85% target)\n23% increase in stakeholder engagement scores (exceeds 20% target)\n84% accuracy in personality classification (exceeds 82% target)\nUsage Metrics:\n76% feature adoption rate among rolled out customers\nAverage 4.2 hours/week time savings per PM\n89% of AI suggestions accepted or modified (vs rejected)\n2,400+ stakeholder profiles created across beta cohort\n\nQualitative analysis\nPositive Themes:\n\"Game-changer for stakeholder management\" - 67% of feedback\nSignificant time savings reported by 84% of users\nImproved stakeholder relationships noted by 71% of users\nSlack integration praised for seamless workflow\nAreas for Improvement:\n23% request more granular personality customization\n18% want additional stakeholder archetypes\nSome edge cases in personality detection for new stakeholders\nSupport Volume:\n12% lower than projected for new feature rollout\nMost common questions: setup and Slack permissions (resolved with updated onboarding)\n\nNext steps\nImmediate Next Steps (Post Full Rollout):\nComplete rollout to remaining 60% of Pro tier customers by August 15th\nConduct comprehensive performance review by August 30th\nBegin v2 planning incorporating rollout feedback\nEvaluate expansion to Standard tier customers (Q4 2024)\nv2 Feature Pipeline (Based on Rollout Feedback):\nAdditional stakeholder archetypes (Customer Success, Legal, Finance)\nEnhanced personality customization options\nEmail platform integration (Outlook, Gmail)\nAdvanced sentiment analysis for relationship health tracking\n\n\n"
+        }
+      }
+    ],
+    "Writer Agent": [
+      {
+        "json": {
+          "output": "🚀 Say hello to fewer silos and faster decisions.\n\nIf you’ve ever struggled to get a 360° view of your business data across systems, this one’s for you 👇\n\nOur new Unified Insights Dashboard brings cross-functional clarity in one click—no more stitching together spreadsheets or hopping between platforms.\n\nHere’s what’s new:\n\n📊 Out-of-the-box Integrations: Connect CRM, analytics, finance tools—without writing a single line of code. Get the full picture faster.  \n⚡ Real-Time Alerts: Built-in triggers notify you when key metrics spike or dip—so you can act, not just analyze.  \n🧠 Smart Summaries: AI-generated insights highlight what’s changing and why—saving your teams from data rabbit holes.\n\nWhy it matters: Whether you’re in product, sales, or strategy, quick access to the right data means smarter decisions and stronger alignment.\n\nHats off to the product & engineering teams who made this happen 🙌 #TeamWork\n\nReady to reimagine how your team drives insight to action?\n\nWhat dashboard blind spots are you still trying to solve for? Let’s talk👇\n\n#DataDriven #ProductLaunch #DigitalTransformation #BusinessIntelligence #ProductInnovation"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Google Drive Trigger": { "main": [[{ "node": "Get a document", "type": "main", "index": 0 }]] },
+    "Get a document": { "main": [[{ "node": "Writer Agent", "type": "main", "index": 0 }]] },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          { "node": "Writer Agent", "type": "ai_languageModel", "index": 0 },
+          { "node": "Evaluator agent", "type": "ai_languageModel", "index": 0 },
+          { "node": "Optimiser Agent", "type": "ai_languageModel", "index": 0 }
+        ]
+      ]
+    },
+    "Set post": { "main": [[{ "node": "Evaluator agent", "type": "main", "index": 0 }]] },
+    "Evaluator agent": { "main": [[{ "node": "If", "type": "main", "index": 0 }]] },
+    "If": {
+      "main": [
+        [{ "node": "Update a document", "type": "main", "index": 0 }],
+        [{ "node": "Optimiser Agent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Optimiser Agent": { "main": [[{ "node": "Set post", "type": "main", "index": 0 }]] },
+    "Simple Memory": { "ai_memory": [[{ "node": "Evaluator agent", "type": "ai_memory", "index": 0 }]] },
+    "Simple Memory1": { "ai_memory": [[{ "node": "Optimiser Agent", "type": "ai_memory", "index": 0 }]] },
+    "Writer Agent": { "main": [[{ "node": "Set post", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1f646818-3449-4b09-a31b-7084fc4fc42d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "bgSn2erNMSt0YWVj",
+  "tags": []
+}
 
