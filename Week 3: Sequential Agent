@@ -1,1 +1,432 @@
+{
+  "name": "Week 3: Sequential Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "4691c239-41a2-44c3-bd32-189d8614c02d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "subreddit": "ProductManagement",
+        "filters": { "category": "rising" }
+      },
+      "type": "n8n-nodes-base.reddit",
+      "typeVersion": 1,
+      "position": [208, 0],
+      "id": "d0052b28-e28d-4fb0-9a7b-0410b6666b5e",
+      "name": "Get many posts",
+      "credentials": {
+        "redditOAuth2Api": {
+          "id": "YOUR_REDDIT_CREDENTIAL_ID",
+          "name": "YOUR_REDDIT_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "13deb7b0-4810-45ac-af50-9a047d114245",
+              "leftValue": "={{ $json.ups }}",
+              "rightValue": 10,
+              "operator": { "type": "number", "operation": "gte" }
+            },
+            {
+              "id": "a109e758-67f7-481a-899b-67f7472db626",
+              "leftValue": "={{ DateTime.fromSeconds($json.created).toISO() }}",
+              "rightValue": "={{ $today.minus(180,'days').toISO() }}",
+              "operator": { "type": "dateTime", "operation": "after" }
+            },
+            {
+              "id": "8da5070c-9a27-4f17-b708-0883f19abe6a",
+              "leftValue": "={{ $json.selftext }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [416, 0],
+      "id": "997535df-d2a2-4c35-92a6-ac018d7037ff",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "71c282ec-9cff-46cd-8aff-8b7ffd631a86", "name": "title", "value": "={{ $json.title }}", "type": "string" },
+            { "id": "cc39c617-8bd0-4596-afbb-95fe8a8b7461", "name": "postContent", "value": "={{ $json.selftext }}", "type": "string" },
+            { "id": "2a1ff9f3-11d2-414c-9939-5d7f633e92af", "name": "score", "value": "={{ $json.score }}", "type": "number" },
+            { "id": "824903c4-62ff-449d-8122-6b798c4de37e", "name": "num_comments", "value": "={{ $json.num_comments }}", "type": "number" },
+            { "id": "4bb1448f-a637-411c-b080-dd60653d2fc6", "name": "link", "value": "={{ $json.permalink }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [624, 0],
+      "id": "be7d36fe-cabb-457c-ac5a-5809601712b1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": { "content": "## Data Collection", "height": 320, "width": 816 },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-48, -112],
+      "typeVersion": 1,
+      "id": "a734553e-3294-461c-9718-9a3c2dc7f2f2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "mode": "list", "value": "gpt-4o-mini" },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [960, -64],
+      "id": "85138a1d-6925-441f-863c-ee1f80f1baf3",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": { "mode": "combine", "combineBy": "combineByPosition", "options": {} },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1328, -16],
+      "id": "1809806c-caea-4dc4-ac66-01bea3c89053",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "69fd39da-c1fa-404a-973e-ba576a2b5a9c",
+              "leftValue": "={{ $json.output.trim() }}",
+              "rightValue": "yes",
+              "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [1536, -16],
+      "id": "7587e2be-8128-4bb6-89d5-867b85e2e123",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Decide whether this reddit post is asking for or giving career advice.\n\nIf the reddit post is one of the following, output only no:\nBot posts and spam - These can skew your analysis with non-authentic content\nMisinformation - Posts containing unverified claims or adverts for software tools\nResearch recruitment - Universities/organizations soliciting participants\nFundraising posts - Charity events or personal fundraisers\nCross-posts - Content shared from other subreddits that might not be firsthand experiences\n\nIf the reddit post is asking for or giving career advice, output only yes.\n\nReddit post:  {{ $json.postContent }}\n\nIs this post about career advice? Output only \"yes\" or \"no\"\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [960, -224],
+      "id": "e3c774b9-09e9-4034-ad31-74d26fc4efd3",
+      "name": "Classifier Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Based on the following Reddit post, give a very brief one sentence summary of the post. It should be 7 words or fewer.\n\nReddit post:  \"{{ $json.postContent }}\"\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [1728, 224],
+      "id": "8bc428ff-1b3c-40a5-a5d1-79223cb0ee4c",
+      "name": "Create a title"
+    },
+    {
+      "parameters": { "options": {} },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2.1,
+      "position": [1824, -288],
+      "id": "7b13dd0f-b0d7-4633-8655-f23185278fce",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "mode": "list", "value": "gpt-4o-mini" },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [1824, -144],
+      "id": "090db8dc-ff37-488d-b9b5-3e1f72727054",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": { "__rl": true, "mode": "list", "value": "gpt-4o-mini" },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [1728, 384],
+      "id": "67f80ff9-e209-4daf-bd74-50f63b99922b",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "YOUR_OPENAI_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "5ebec6f2-064f-4c18-9184-566d6bf9e010", "name": "shortTitle", "value": "={{ $json.output }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 224],
+      "id": "93c3bbc9-60a4-4f57-963a-90ba12463565",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": { "mode": "combine", "combineBy": "combineByPosition", "numberInputs": 3, "options": {} },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [2240, -32],
+      "id": "1d02f5b0-d714-43d0-a24b-0f20dc9fb0a0",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_DOC_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOC_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 0,
+          "mode": "list",
+          "cachedResultName": "YOUR_SHEET_TAB_NAME",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_DOC_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $json.shortTitle }}",
+            "Summary": "={{ $('Summarization Chain').item.json.output.text }}",
+            "Link": "={{ $json.link }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "Title", "displayName": "Title", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Summary", "displayName": "Summary", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "Link", "displayName": "Link", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [2496, -224],
+      "id": "a774efc8-656d-4e74-aa23-eb8412eb8bb3",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "YOUR_GOOGLE_SHEETS_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "a2ba89f7-ba1a-45c8-9e18-ec4de574069b", "name": "shortTitle", "value": "={{ $json.shortTitle }}", "type": "string" },
+            { "id": "b0ff3944-5eb3-487b-a614-00fb4a4b2c33", "name": "summary", "value": "={{ $('Summarization Chain').item.json.output.text }}", "type": "string" },
+            { "id": "3c1ea0b1-0a2c-4ae3-b901-8371e5c40ed6", "name": "link", "value": "={{ $json.link }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2496, -16],
+      "id": "38ac9cdb-a3e5-4957-b4e9-db17bfac604a",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "shortTitle, summary, link",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [2704, -16],
+      "id": "816e13f2-d25b-4cfa-ae74-2d55defe10b0",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "your-channel"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": { "includeLinkToWorkflow": false }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [3120, -16],
+      "id": "aa0618ea-ccd2-42fd-b1a3-2d039c188426",
+      "name": "Send a message",
+      "webhookId": "REDACTED_WEBHOOK_ID",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_SLACK_CREDENTIAL_ID",
+          "name": "YOUR_SLACK_CREDENTIAL_NAME"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Assume input JSON is stored in a variable called 'items'\n// n8n: use input[0].json\n\nconst input = [\n{\n\"data\": $input.first().json.data\n}\n];\n\n// Flatten out the array\nconst data = input[0].data;\n\n// Map each item into a formatted string\nconst output = data.map(item => {\nreturn `*${item.shortTitle}*\\n${item.summary}\\n${item.link}`;\n});\n\n// Join them with a blank line between\nconst result = output.join('\\n\\n');return {\ntext: result\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2912, -16],
+      "id": "661f5409-ed78-4d66-a926-65d284cc57dc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": { "content": "## Content Analysis", "height": 528, "width": 640 },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [832, -320],
+      "typeVersion": 1,
+      "id": "f71b59b1-27c6-4985-9979-b9470fb81583",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": { "content": "## Insight Generation", "height": 864, "width": 896 },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1504, -320],
+      "typeVersion": 1,
+      "id": "e03b7fc4-5372-498b-9657-fcd59155c1a8",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": { "content": "## Outputs", "height": 528, "width": 944 },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [2432, -320],
+      "typeVersion": 1,
+      "id": "84ee5302-1b1a-446e-a941-de09315547f0",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [[{ "node": "Get many posts", "type": "main", "index": 0 }]]
+    },
+    "Get many posts": {
+      "main": [[{ "node": "Filter", "type": "main", "index": 0 }]]
+    },
+    "Filter": {
+      "main": [[{ "node": "Edit Fields", "type": "main", "index": 0 }]]
+    },
+    "Edit Fields": {
+      "main": [
+        [{ "node": "Classifier Agent", "type": "main", "index": 0 }],
+        [{ "node": "Merge", "type": "main", "index": 1 }]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Classifier Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Merge": { "main": [[{ "node": "Filter1", "type": "main", "index": 0 }]] },
+    "Filter1": {
+      "main": [
+        [{ "node": "Summarization Chain", "type": "main", "index": 0 }],
+        [{ "node": "Create a title", "type": "main", "index": 0 }],
+        [{ "node": "Merge1", "type": "main", "index": 2 }]
+      ]
+    },
+    "Classifier Agent": { "main": [[{ "node": "Merge", "type": "main", "index": 0 }]] },
+    "Summarization Chain": { "main": [[{ "node": "Merge1", "type": "main", "index": 0 }]] },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [[{ "node": "Summarization Chain", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [[{ "node": "Create a title", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Create a title": { "main": [[{ "node": "Edit Fields1", "type": "main", "index": 0 }]] },
+    "Edit Fields1": { "main": [[{ "node": "Merge1", "type": "main", "index": 1 }]] },
+    "Merge1": {
+      "main": [
+        [{ "node": "Append row in sheet", "type": "main", "index": 0 }],
+        [{ "node": "Edit Fields2", "type": "main", "index": 0 }]
+      ]
+    },
+    "Edit Fields2": { "main": [[{ "node": "Aggregate", "type": "main", "index": 0 }]] },
+    "Aggregate": { "main": [[{ "node": "Code in JavaScript", "type": "main", "index": 0 }]] },
+    "Code in JavaScript": { "main": [[{ "node": "Send a message", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "e8017875-e444-49c7-a259-9b3ab33494d8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "gfKxB1jUHRFq8PY8",
+  "tags": []
+}
 
